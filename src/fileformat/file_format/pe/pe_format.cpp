@@ -593,37 +593,34 @@ void PeFormat::initStructures(const std::string & dllListFile)
 	initDllList(dllListFile);
 	stateIsValid = false;
 
-	file = new PeFileT(fileStream);
-	if (file)
+	file.reset(new PeFileT(fileStream));
+	try
 	{
-		try
-		{
-			if(file->loadPeHeaders(bytes) == ERROR_NONE)
-				stateIsValid = true;
+		if(file->loadPeHeaders(bytes) == ERROR_NONE)
+			stateIsValid = true;
 
-			file->readCoffSymbolTable(bytes);
-			file->readImportDirectory();
-			file->readIatDirectory();
-			file->readBoundImportDirectory();
-			file->readDelayImportDirectory();
-			file->readExportDirectory();
-			file->readDebugDirectory();
-			file->readTlsDirectory();
-			file->readResourceDirectory();
-			file->readSecurityDirectory();
-			file->readComHeaderDirectory();
-			file->readRelocationsDirectory();
-			file->readLoadConfigDirectory();
+		file->readCoffSymbolTable(bytes);
+		file->readImportDirectory();
+		file->readIatDirectory();
+		file->readBoundImportDirectory();
+		file->readDelayImportDirectory();
+		file->readExportDirectory();
+		file->readDebugDirectory();
+		file->readTlsDirectory();
+		file->readResourceDirectory();
+		file->readSecurityDirectory();
+		file->readComHeaderDirectory();
+		file->readRelocationsDirectory();
+		file->readLoadConfigDirectory();
 
-			// Fill-in the loader error info from PE file
-			initLoaderErrorInfo();
+		// Fill-in the loader error info from PE file
+		initLoaderErrorInfo();
 
-			// Create an instance of PeFormatParser32/PeFormatParser64
-			formatParser = new PeFormatParser(this, file);
-		}
-		catch(...)
-		{}
+		// Create an instance of PeFormatParser32/PeFormatParser64
+		formatParser = new PeFormatParser(this, file);
 	}
+	catch(...)
+	{}
 
 	if(stateIsValid)
 	{
