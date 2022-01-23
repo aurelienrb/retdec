@@ -10,6 +10,7 @@
 #include <functional>
 #include <string>
 #include <vector>
+#include <optional>
 
 namespace retdec {
 namespace utils {
@@ -69,9 +70,8 @@ public:
 	bool bitsToBig(std::vector<unsigned char>& values) const;
 	bool bitsToLittle(std::vector<unsigned char>& values) const;
 
-	bool get1Byte(
+	std::optional<uint8_t> get1Byte(
 			std::uint64_t address,
-			std::uint64_t& res,
 			Endianness e = Endianness::UNKNOWN) const;
 	bool get2Byte(
 			std::uint64_t address,
@@ -207,6 +207,10 @@ protected:
 			const std::vector<std::uint8_t>& data,
 			double& res) const;
 
+	template<typename T>
+	using MayGetNByteFn = std::function<std::optional<T>(std::uint64_t, Endianness)>;
+	using MayGet1ByteFn = MayGetNByteFn<uint8_t>;
+
 	using GetNByteFn = std::function<bool(
 			std::uint64_t,
 			std::uint64_t&,
@@ -217,7 +221,7 @@ protected:
 			std::uint64_t&, Endianness)>;
 
 	bool getNTBSImpl(
-			const GetNByteFn& get1ByteFn,
+			const MayGet1ByteFn& get1ByteFn,
 			std::uint64_t address,
 			std::string& res,
 			std::size_t size) const;

@@ -277,17 +277,18 @@ bool ByteValueStorage::bitsToLittle(std::vector<unsigned char>& values) const
  * or default file endian
  *
  * @param address Address to get integer from
- * @param res Result integer
  * @param e Endian - if specified it is forced, otherwise file's endian is used
  *
- * @return Status of operation (@c true if all is OK, @c false otherwise)
+ * @return Resulting byte (if OK)
  */
-bool ByteValueStorage::get1Byte(
+std::optional<uint8_t> ByteValueStorage::get1Byte(
 		std::uint64_t address,
-		std::uint64_t& res,
 		Endianness e) const
 {
-	return getXByte(address, 1, res, e);
+	if (uint64_t res; getXByte(address, 1, res, e)) {
+		return static_cast<uint8_t>(res);
+	}
+	return {};
 }
 
 /**
@@ -1052,13 +1053,12 @@ bool ByteValueStorage::getDoubleImpl(
 }
 
 bool ByteValueStorage::getNTBSImpl(
-		const GetNByteFn& get1ByteFn,
+		const MayGet1ByteFn & get1ByteFn,
 		std::uint64_t address,
 		std::string& res, std::size_t size) const
 {
-	std::uint64_t c = 0;
-	auto suc = get1ByteFn(address, c, getEndianness());
 	res.clear();
+	std::uint8_t c = get1ByteFn(address, getEndianness()).value_or(0);
 
 	while (suc && (c || size))
 	{
