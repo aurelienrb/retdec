@@ -166,11 +166,13 @@ uint32_t DynamicBuffer::getRealDataSize() const
  */
 void DynamicBuffer::erase(uint32_t startPos, uint32_t amount)
 {
+	//assert(startPos + amount < _data.size());
 	if (startPos >= _data.size())
 		return;
 
-	amount = startPos + amount > _data.size() ? _data.size() - startPos : amount;
-	_data.erase(_data.begin() + startPos, _data.begin() + startPos + amount);
+	const size_t maxAmount = _data.size() - startPos;
+	const auto itStart = _data.begin() + startPos;
+	_data.erase(itStart, itStart + std::min<size_t>(amount, maxAmount));
 }
 
 /**

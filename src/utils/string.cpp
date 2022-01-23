@@ -93,11 +93,12 @@ bool isPrintable(WideCharType c) {
 	if (!isASCII(c)) {
 		return false;
 	}
+	const auto asciiChar = static_cast<unsigned char>(c);
 
 	// std::isprint() returns true for all characters with an ASCII code
 	// greater than 0x1f (US), except 0x7f (DEL). However, we also want to
 	// consider other characters as printable in the form of escape sequences.
-	return isPrintableChar(c) || std::isspace(c) || c == '\a' || c == '\b';
+	return isPrintableChar(asciiChar) || std::isspace(asciiChar) || asciiChar == '\a' || asciiChar == '\b';
 }
 
 /**
@@ -159,13 +160,14 @@ bool canBeAppendedLiterally(WideCharType c, bool lastWasHex) {
 	if (!isASCII(c)) {
 		return false;
 	}
+	const auto asciiChar = static_cast<unsigned char>(c);
 
 	// Only printable characters can be appended literally. However, we have to
 	// be careful when the last character output was a hexadecimal escape code,
 	// in which case we cannot append hexadecimal digits explicitly (they may
 	// be considered as a continuation of the previous character, e.g. "\x00a"
 	// is a single character).
-	return isPrintableChar(c) && (!lastWasHex || !std::isxdigit(c));
+	return isPrintableChar(asciiChar) && (!lastWasHex || !std::isxdigit(asciiChar));
 }
 
 /**
@@ -191,7 +193,7 @@ std::string charToEscapedCStringRepr(WideCharType c,
 		if (c == '"' || c == '\\') {
 			repr += '\\';
 		}
-		repr += c;
+		repr += static_cast<char>(c);
 		return repr;
 	}
 
@@ -371,7 +373,7 @@ bool containsAnyOfChars(const std::string &str, std::string::value_type c) {
 */
 std::string toLower(std::string str) {
 	std::transform(str.begin(), str.end(), str.begin(),
-		[](const unsigned char c) { return std::tolower(c); });
+		[](const unsigned char c) { return static_cast<char>(std::tolower(c)); });
 	return str;
 }
 
@@ -382,7 +384,8 @@ std::string toLower(std::string str) {
 */
 std::string toUpper(std::string str) {
 	std::transform(str.begin(), str.end(), str.begin(),
-		[](const unsigned char c) { return std::toupper(c); });
+		[](const unsigned c) { return static_cast<char>(std::toupper(c));
+	});
 	return str;
 }
 
@@ -1020,7 +1023,7 @@ bool isNiceString(const std::string &str, double minRatio) {
  *         @c False otherwise.
  */
 bool isNiceAsciiWideCharacter(unsigned long long c) {
-	return c <= 0xff && isNiceCharacter(c);
+	return c <= 0xff && isNiceCharacter(static_cast<unsigned char>(c));
 }
 
 /**

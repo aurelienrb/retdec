@@ -1062,7 +1062,7 @@ bool ByteValueStorage::getNTBSImpl(
 
 	while (suc && (c || size))
 	{
-		res += c;
+		res += static_cast<uint8_t>(c); // we read 1 byte
 		if (size && res.length() == size)
 		{
 			break;

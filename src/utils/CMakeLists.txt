@@ -21,7 +21,7 @@ add_library(utils STATIC
 add_library(retdec::utils ALIAS utils)
 
 target_compile_features(utils PUBLIC cxx_std_17)
-
+target_compile_options(utils PRIVATE /W4)
 target_compile_definitions(utils PRIVATE
 	RETDEC_GIT_COMMIT_HASH="${RETDEC_GIT_COMMIT_HASH}"
 	RETDEC_BUILD_DATE="${RETDEC_BUILD_DATE}"
@@ -53,7 +53,7 @@ elseif(UNIX AND (NOT APPLE) AND CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
 			stdc++fs
 	)
 # Library not found -> hope compiler does not need it.
-elseif(NOT APPLE)
+elseif(NOT APPLE AND NOT MSVC)
 	message(STATUS "-- Library stdc++fs NOT found -> linking utils without stdc++fs library")
 endif()
 
