@@ -38,8 +38,8 @@ public:
 	virtual std::size_t getNumberOfNibblesInByte() const override;
 	virtual bool hasMixedEndianForDouble() const override;
 
-	virtual bool getXByte(std::uint64_t address, std::uint64_t x, std::uint64_t& res, retdec::utils::Endianness e = retdec::utils::Endianness::UNKNOWN) const override;
-	virtual bool getXBytes(std::uint64_t address, std::uint64_t x, std::vector<std::uint8_t>& res) const override;
+	[[nodiscard]] virtual bool getXByte(std::uint64_t address, std::uint64_t x, std::uint64_t& res, retdec::utils::Endianness e = retdec::utils::Endianness::UNKNOWN) const override;
+	[[nodiscard]] virtual bool getXBytes(std::uint64_t address, std::uint64_t x, std::vector<std::uint8_t>& res) const override;
 
 	virtual bool setXByte(std::uint64_t address, std::uint64_t x, std::uint64_t val, retdec::utils::Endianness e = retdec::utils::Endianness::UNKNOWN) override;
 	virtual bool setXBytes(std::uint64_t address, const std::vector<std::uint8_t>& res) override;

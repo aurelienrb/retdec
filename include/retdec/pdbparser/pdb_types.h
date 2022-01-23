@@ -88,12 +88,11 @@ class PDBTypeDef
 				type_index(ind), type_class(c), size_bytes(bts)
 		{
 		}
-		;
+
 	public:
-		virtual ~PDBTypeDef(void)
+		virtual ~PDBTypeDef()
 		{
 		}
-		;
 
 		// Basic methods - parse and dump
 // matula, this triggers clang warning, since 'parse' methods in child classes have different signature.

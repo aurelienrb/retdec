@@ -122,7 +122,7 @@ namespace PeLib
 		  /// Constructor
 		  ResourceElement();
 		  /// Necessary virtual destructor.
-		  virtual ~ResourceElement() {}
+		  virtual ~ResourceElement() = default;
 	};
 
 	/// ResourceLeafs represent the leafs of the resource tree: The actual resources.

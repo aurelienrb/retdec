@@ -130,7 +130,7 @@ namespace PeLib
 		PeFileT(const std::string& strFileName);
 		PeFileT(std::istream& stream);
 		PeFileT();                                        /// Default constructor which exists only for the sake of allowing to construct files without filenames.
-		virtual ~PeFileT() {}
+		virtual ~PeFileT() = default;
 
 		/// Load the PE file using the already-open stream
 		int loadPeHeaders(bool loadHeadersOnly = false);
