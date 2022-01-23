@@ -571,8 +571,6 @@ PeFormat::PeFormat(const std::uint8_t *data, std::size_t size, LoadFlags loadFla
  */
 PeFormat::~PeFormat()
 {
-	delete file;
-	delete formatParser;
 }
 
 /**
@@ -607,37 +605,34 @@ void PeFormat::initStructures(const std::string & dllListFile)
 	initDllList(dllListFile);
 	stateIsValid = false;
 
-	file = new PeFileT(fileStream);
-	if (file)
+	file = std::make_unique<PeFileT>(fileStream);
+	try
 	{
-		try
-		{
-			if(file->loadPeHeaders(bytes) == ERROR_NONE)
-				stateIsValid = true;
+		if(file->loadPeHeaders(bytes) == ERROR_NONE)
+			stateIsValid = true;
 
-			file->readCoffSymbolTable(bytes);
-			file->readImportDirectory();
-			file->readIatDirectory();
-			file->readBoundImportDirectory();
-			file->readDelayImportDirectory();
-			file->readExportDirectory();
-			file->readDebugDirectory();
-			file->readTlsDirectory();
-			file->readResourceDirectory();
-			file->readSecurityDirectory();
-			file->readComHeaderDirectory();
-			file->readRelocationsDirectory();
-			file->readLoadConfigDirectory();
+		file->readCoffSymbolTable(bytes);
+		file->readImportDirectory();
+		file->readIatDirectory();
+		file->readBoundImportDirectory();
+		file->readDelayImportDirectory();
+		file->readExportDirectory();
+		file->readDebugDirectory();
+		file->readTlsDirectory();
+		file->readResourceDirectory();
+		file->readSecurityDirectory();
+		file->readComHeaderDirectory();
+		file->readRelocationsDirectory();
+		file->readLoadConfigDirectory();
 
-			// Fill-in the loader error info from PE file
-			initLoaderErrorInfo();
+		// Fill-in the loader error info from PE file
+		initLoaderErrorInfo();
 
-			// Create an instance of PeFormatParser32/PeFormatParser64
-			formatParser = new PeFormatParser(this, file);
-		}
-		catch(...)
-		{}
+		// Create an instance of PeFormatParser32/PeFormatParser64
+		formatParser.reset(new PeFormatParser(*this, *file));
 	}
+	catch(...)
+	{}
 
 	if(stateIsValid)
 	{
@@ -1961,7 +1956,7 @@ static Signer getCountersigner(Countersignature* counter)
 	// If there is any verification error, export it as a proper message
 	if (counter->verify_flags != COUNTERSIGNATURE_VFY_VALID)
 		countersigner.warnings.emplace_back(countersigFlagToString(counter->verify_flags));
-	
+
 	return countersigner;
 }
 
@@ -2195,7 +2190,7 @@ void PeFormat::loadDotnetHeaders()
  *  of Timestamp information, read all of them and return them
  */
 PeTimestamps PeFormat::getTimestamps() const
-{	
+{
 	// Inspiration: http://waleedassar.blogspot.com/2014/02/pe-timedatestamp-viewer.html
 	// 1. TimeDateStamp in COFF header
 	// 2. TimeDateStamp in Export Directory Table
@@ -2206,14 +2201,12 @@ PeTimestamps PeFormat::getTimestamps() const
 	// 6. TimeDateStamp in Load Configuration Directory
 	PeTimestamps timestamps = { 0 };
 
-	auto pefile = formatParser->getPefile();
-	if (!pefile)
-		return timestamps;
+	const auto & pefile = formatParser->getPefile();
 
 	timestamps.coffTime = getTimeStamp();
-	timestamps.exportTime = pefile->expDir().getTimeDateStamp();
-	timestamps.configTime = pefile->configDir().getTimeDateStamp();
-	const DebugDirectory& debugDir = pefile->debugDir();
+	timestamps.exportTime = pefile.expDir().getTimeDateStamp();
+	timestamps.configTime = pefile.configDir().getTimeDateStamp();
+	const DebugDirectory& debugDir = pefile.debugDir();
 
 	for (int i = 0; i < debugDir.calcNumberOfEntries(); ++i)
 	{
@@ -2244,8 +2237,7 @@ PeTimestamps PeFormat::getTimestamps() const
 	}
 
 	/* Assume correct 3 level structure and only read through 3 levels */
-	auto root = formatParser->getResourceTreeRoot();
-	if (root)
+	if (auto root = formatParser->getResourceTreeRoot(); root)
 	{
 		timestamps.resourceTime.push_back(root->getTimeDateStamp());
 		for (std::size_t i = 0, e = root->getNumberOfChildren(); i < e; ++i)

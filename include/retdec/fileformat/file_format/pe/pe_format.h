@@ -28,7 +28,7 @@ namespace fileformat {
 class PeFormat : public FileFormat
 {
 	private:
-		PeFormatParser *formatParser;                              ///< parser of PE file
+		std::unique_ptr<PeFormatParser> formatParser;              ///< parser of PE file
 		std::unique_ptr<CLRHeader> clrHeader;                      ///< .NET CLR header
 		std::unique_ptr<MetadataHeader> metadataHeader;            ///< .NET metadata header
 		std::unique_ptr<MetadataStream> metadataStream;            ///< .NET metadata stream
@@ -112,7 +112,7 @@ class PeFormat : public FileFormat
 		void scanForOptHeaderAnomalies();
 		/// @}
 	protected:
-		PeLib::PeFileT *file;              ///< PeLib representation of PE file
+		std::unique_ptr<PeLib::PeFileT> file;              ///< PeLib representation of PE file
 	public:
 		PeFormat(const std::string & pathToFile, const std::string & dllListFile, LoadFlags loadFlags = LoadFlags::NONE);
 		PeFormat(std::istream &inputStream, LoadFlags loadFlags = LoadFlags::NONE);
