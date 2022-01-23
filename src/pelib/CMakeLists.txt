@@ -27,12 +27,7 @@ target_include_directories(pelib
 		$<INSTALL_INTERFACE:${RETDEC_INSTALL_INCLUDE_DIR}>
 )
 
-# Disable all warnings from this library.
-if(MSVC)
-	target_compile_options(pelib PUBLIC "/w")
-else()
-	target_compile_options(pelib PUBLIC "-w")
-endif()
+target_compile_options(pelib PRIVATE "/W4")
 
 set_target_properties(pelib
 	PROPERTIES

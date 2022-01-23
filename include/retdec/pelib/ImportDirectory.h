@@ -13,14 +13,15 @@
 #ifndef RETDEC_PELIB_IMPORTDIRECTORY_H
 #define RETDEC_PELIB_IMPORTDIRECTORY_H
 
-#include <set>
-#include <unordered_map>
-
 #include "retdec/pelib/PeLibAux.h"
 #include "retdec/pelib/ImageLoader.h"
 #include "retdec/pelib/ImageLoader.h"
 #include "retdec/utils/ord_lookup.h"
 #include "retdec/utils/string.h"
+
+#include <optional>
+#include <set>
+#include <unordered_map>
 
 namespace PeLib
 {
@@ -113,9 +114,9 @@ namespace PeLib
 		  int addFunction(const std::string& strFilename, const std::string& strFuncname); // EXPORT _byName
 
 		  /// Get the ID of a file through it's name.
-		  unsigned int getFileIndex(const std::string& strFilename, bool newDir) const; // EXPORT
+		  std::optional<size_t> getFileIndex(const std::string& strFilename, bool newDir) const; // EXPORT
 		  /// Get the ID of a function through it's name.
-		  unsigned int getFunctionIndex(const std::string& strFilename, const std::string& strFuncname, bool newDir) const; // EXPORT
+		  std::optional<size_t> getFunctionIndex(const std::string& strFilename, const std::string& strFuncname, bool newDir) const; // EXPORT
 
 		  /// Get the name of an imported file.
 		  std::string getFileName(std::uint32_t dwFilenr, bool newDir) const; // EXPORT
@@ -302,8 +303,7 @@ namespace PeLib
 	* @param newDir Flag to decide if the OLDDIR or new import directory is used.
 	* @return The ID of an imported file.
 	**/
-	inline
-	unsigned int ImportDirectory::getFileIndex(const std::string& strFilename, bool newDir) const
+	inline std::optional<size_t> ImportDirectory::getFileIndex(const std::string& strFilename, bool newDir) const
 	{
 		auto * il = &getImportList(newDir);
 
@@ -315,15 +315,12 @@ namespace PeLib
 
 		if (FileIter != il->end())
 		{
-			return static_cast<unsigned int>(std::distance(il->begin(), FileIter));
+			return static_cast<size_t>(std::distance(il->begin(), FileIter));
 		}
 		else
 		{
-			return -1;
-			// throw Exceptions::InvalidName(ImportDirectoryId, __LINE__);
+			return {};
 		}
-
-		return ERROR_NONE;
 	}
 
 	/**
@@ -333,17 +330,20 @@ namespace PeLib
 	* @param newDir Flag to decide if the OLDDIR or new import directory is used.
 	* @return ID of the imported function.
 	**/
-	inline
-	unsigned int ImportDirectory::getFunctionIndex(const std::string& strFilename, const std::string& strFuncname, bool newDir) const
+	inline std::optional<size_t>
+	ImportDirectory::getFunctionIndex(const std::string& strFilename, const std::string& strFuncname, bool newDir) const
 	{
-		unsigned int uiFile = getFileIndex(strFilename, newDir);
-
-		for (unsigned int i=0;i<getNumberOfFunctions(uiFile, newDir);i++)
+		if (auto uiFile = getFileIndex(strFilename, newDir))
 		{
-			if (getFunctionName(uiFile, i, newDir) == strFuncname) return i;
+			for (uint32_t i = 0; i < getNumberOfFunctions(*uiFile, newDir); i++)
+			{
+				if (getFunctionName(*uiFile, i, newDir) == strFuncname) {
+					return i;
+				}
+			}		
 		}
 
-		return -1;
+		return {};
 	}
 
 	/**
@@ -1063,7 +1063,7 @@ namespace PeLib
 	inline
 	std::uint32_t ImportDirectory::getFirstThunk(const std::string& strFilename, bool newDir) const
 	{
-		return getImportList(newDir)[getFileIndex(strFilename, newDir)].impdesc.FirstThunk;
+		return getImportList(newDir)[getFileIndex(strFilename, newDir).value()].impdesc.FirstThunk;
 	}
 
 	/**
@@ -1074,7 +1074,7 @@ namespace PeLib
 	inline
 	std::uint32_t ImportDirectory::getOriginalFirstThunk(const std::string& strFilename, bool newDir) const
 	{
-		return getImportList(newDir)[getFileIndex(strFilename, newDir)].impdesc.OriginalFirstThunk;
+		return getImportList(newDir)[getFileIndex(strFilename, newDir).value()].impdesc.OriginalFirstThunk;
 	}
 
 	/**
@@ -1085,7 +1085,7 @@ namespace PeLib
 	inline
 	std::uint32_t ImportDirectory::getForwarderChain(const std::string& strFilename, bool newDir) const
 	{
-		return getImportList(newDir)[getFileIndex(strFilename, newDir)].impdesc.ForwarderChain;
+		return getImportList(newDir)[getFileIndex(strFilename, newDir).value()].impdesc.ForwarderChain;
 	}
 
 	/**
@@ -1096,13 +1096,13 @@ namespace PeLib
 	inline
 	std::uint32_t ImportDirectory::getTimeDateStamp(const std::string& strFilename, bool newDir) const
 	{
-		return getImportList(newDir)[getFileIndex(strFilename, newDir)].impdesc.TimeDateStamp;
+		return getImportList(newDir)[getFileIndex(strFilename, newDir).value()].impdesc.TimeDateStamp;
 	}
 
 	inline
 	std::uint32_t ImportDirectory::getRvaOfName(const std::string& strFilename, bool newDir) const
 	{
-		return getImportList(newDir)[getFileIndex(strFilename, newDir)].impdesc.Name;
+		return getImportList(newDir)[getFileIndex(strFilename, newDir).value()].impdesc.Name;
 	}
 
 	/**

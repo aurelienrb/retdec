@@ -92,7 +92,6 @@ namespace PeLib
 			int read(ImageLoader & imageLoader)
 			{
 				std::uint32_t rva = imageLoader.getDataDirRva(PELIB_IMAGE_DIRECTORY_ENTRY_DELAY_IMPORT);
-				std::uint32_t size = imageLoader.getDataDirSize(PELIB_IMAGE_DIRECTORY_ENTRY_DELAY_IMPORT);
 				std::uint32_t sizeOfImage = imageLoader.getSizeOfImage();
 				std::uint32_t pointerSize = imageLoader.getPointerSize();
 				std::uint64_t imageBase   = imageLoader.getImageBase();
@@ -103,14 +102,14 @@ namespace PeLib
 				init();
 
 				// Keep loading until we encounter an entry filled with zeros
-				for(std::uint32_t i = 0;; i += sizeof(PELIB_IMAGE_DELAY_LOAD_DESCRIPTOR))
+				for (std::uint32_t offset = 0; rva + offset < sizeOfImage;
+					 offset += sizeof(PELIB_IMAGE_DELAY_LOAD_DESCRIPTOR))
 				{
 					PELIB_IMAGE_DELAY_IMPORT_DIRECTORY_RECORD rec;
 
 					// Read the n-th import directory entry
-					if((rva + i) >= sizeOfImage)
-						break;
-					if(!imageLoader.readImage(&rec.delayedImport, rva + i, sizeof(PELIB_IMAGE_DELAY_LOAD_DESCRIPTOR)))
+					if (!imageLoader.readImage(
+							&rec.delayedImport, rva + offset, sizeof(PELIB_IMAGE_DELAY_LOAD_DESCRIPTOR)))
 						break;
 
 					// Valid delayed import entry starts either with 0 or 0x01.

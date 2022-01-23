@@ -2589,7 +2589,7 @@ bool PeLib::ImageLoader::isGoodPagePointer(
 		try
 		{
 			std::uint8_t dummyBuffer[0x10] = {0};
-			memcmp(pagePtr, dummyBuffer, sizeof(dummyBuffer));
+			(void)memcmp(pagePtr, dummyBuffer, sizeof(dummyBuffer));
 			return true;
 		}
 		catch(...)

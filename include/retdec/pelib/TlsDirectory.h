@@ -116,19 +116,19 @@ namespace PeLib
 		// if there are TLS callbacks
 		if(imageBase < m_tls.AddressOfCallBacks && m_tls.AddressOfCallBacks < (imageBase + sizeOfImage))
 		{
-			std::uint32_t rva = (std::uint32_t)(m_tls.AddressOfCallBacks - imageBase);
+			auto localRva = static_cast<std::uint32_t>(m_tls.AddressOfCallBacks - imageBase);
 
 			for(std::uint32_t i = 0; i < PELIB_MAX_TLS_CALLBACKS; i++)
 			{
 				std::uint64_t AddressOfCallBack = 0;
 
-				if(imageLoader.readPointer(rva, AddressOfCallBack) == 0)
+				if (imageLoader.readPointer(localRva, AddressOfCallBack) == 0)
 					break;
 				if(AddressOfCallBack == 0)
 					break;
 
 				m_Callbacks.push_back(AddressOfCallBack);
-				rva += pointerSize;
+				localRva += pointerSize;
 			}
 		}
 
