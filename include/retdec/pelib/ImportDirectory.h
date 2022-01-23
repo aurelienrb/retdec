@@ -202,6 +202,9 @@ namespace PeLib
 
 		  const std::vector<PELIB_IMAGE_IMPORT_DIRECTORY>& getImportList(bool newDir) const;
 		  std::vector<PELIB_IMAGE_IMPORT_DIRECTORY>& getImportList(bool newDir);
+		  PELIB_IMAGE_IMPORT_DIRECTORY& getImport(bool newDir, uint32_t index);
+		  const PELIB_IMAGE_IMPORT_DIRECTORY& getImport(bool newDir, uint32_t index) const;
+		  const PELIB_IMAGE_IMPORT_DIRECTORY& getImport(bool newDir, std::optional<uint32_t> index) const;
 	};
 
 	/**
@@ -355,13 +358,13 @@ namespace PeLib
 	inline
 	std::string ImportDirectory::getFileName(std::uint32_t dwFilenr, bool newDir) const
 	{
-		return getImportList(newDir)[dwFilenr].name;
+		return getImport(newDir, dwFilenr).name;
 	}
 
 	inline
 	void ImportDirectory::setFileName(std::uint32_t filenr, bool newDir, const std::string& name)
 	{
-		getImportList(newDir)[filenr].name = name;
+		getImport(newDir, filenr).name = name;
 	}
 
 	/**
@@ -375,12 +378,12 @@ namespace PeLib
 	inline
 	std::string ImportDirectory::getFunctionName(std::uint32_t dwFilenr, std::uint32_t dwFuncnr, bool newDir) const
 	{
-		auto & il = getImportList(newDir);
-
-		if(dwFilenr < il.size() && dwFuncnr < il[dwFilenr].thunk_data.size())
+		const auto& td = getImport(newDir, dwFilenr).thunk_data;
+		if(dwFuncnr < td.size())
 		{
-			return il[dwFilenr].thunk_data[dwFuncnr].fname;
+			return td[dwFuncnr].fname;
 		}
+		// else?
 	}
 
 	inline
@@ -392,6 +395,7 @@ namespace PeLib
 		{
 			il[dwFilenr].thunk_data[dwFuncnr].fname = functionName;
 		}
+		// else?
 	}
 
 	/**
@@ -433,12 +437,7 @@ namespace PeLib
 	inline
 	std::uint32_t ImportDirectory::getNumberOfFunctions(std::size_t dwFilenr, bool newDir) const
 	{
-		auto& il = getImportList(newDir);
-		std::uint32_t numFuncs = 0;
-
-		if(dwFilenr < il.size())
-			numFuncs = static_cast<std::uint32_t>(il[dwFilenr].thunk_data.size());
-		return numFuncs;
+		return static_cast<std::uint32_t>(getImport(newDir, dwFilenr).thunk_data.size());
 	}
 
 	/**
@@ -507,26 +506,13 @@ namespace PeLib
 	inline
 	std::uint16_t ImportDirectory::getFunctionHint(std::uint32_t dwFilenr, std::uint32_t dwFuncnr, bool newDir) const
 	{
-		auto& il = getImportList(newDir);
-		std::uint16_t hint = 0;
-
-		if(dwFilenr < il.size() && dwFuncnr < il[dwFilenr].thunk_data.size())
-		{
-			hint = il[dwFilenr].thunk_data[dwFuncnr].hint;
-		}
-
-		return hint;
+		return getImport(newDir, dwFilenr).thunk_data.at(dwFuncnr).hint;
 	}
 
 	inline
 	void ImportDirectory::setFunctionHint(std::uint32_t dwFilenr, std::uint32_t dwFuncnr, bool newDir, std::uint16_t value)
 	{
-		auto& il = getImportList(newDir);
-
-		if(dwFilenr < il.size() && dwFuncnr < il[dwFilenr].thunk_data.size())
-		{
-			il[dwFilenr].thunk_data[dwFuncnr].hint = value;
-		}
+		getImport(newDir, dwFilenr).thunk_data.at(dwFuncnr).hint = value;
 	}
 
 	/**
@@ -1063,7 +1049,7 @@ namespace PeLib
 	inline
 	std::uint32_t ImportDirectory::getFirstThunk(const std::string& strFilename, bool newDir) const
 	{
-		return getImportList(newDir)[getFileIndex(strFilename, newDir).value()].impdesc.FirstThunk;
+		return getImport(newDir, getFileIndex(strFilename, newDir)).impdesc.FirstThunk;
 	}
 
 	/**
@@ -1074,7 +1060,7 @@ namespace PeLib
 	inline
 	std::uint32_t ImportDirectory::getOriginalFirstThunk(const std::string& strFilename, bool newDir) const
 	{
-		return getImportList(newDir)[getFileIndex(strFilename, newDir).value()].impdesc.OriginalFirstThunk;
+		return getImport(newDir, getFileIndex(strFilename, newDir)).impdesc.OriginalFirstThunk;
 	}
 
 	/**
@@ -1085,7 +1071,7 @@ namespace PeLib
 	inline
 	std::uint32_t ImportDirectory::getForwarderChain(const std::string& strFilename, bool newDir) const
 	{
-		return getImportList(newDir)[getFileIndex(strFilename, newDir).value()].impdesc.ForwarderChain;
+		return getImport(newDir, getFileIndex(strFilename, newDir)).impdesc.ForwarderChain;
 	}
 
 	/**
@@ -1096,13 +1082,13 @@ namespace PeLib
 	inline
 	std::uint32_t ImportDirectory::getTimeDateStamp(const std::string& strFilename, bool newDir) const
 	{
-		return getImportList(newDir)[getFileIndex(strFilename, newDir).value()].impdesc.TimeDateStamp;
+		return getImport(newDir, getFileIndex(strFilename, newDir)).impdesc.TimeDateStamp;
 	}
 
 	inline
 	std::uint32_t ImportDirectory::getRvaOfName(const std::string& strFilename, bool newDir) const
 	{
-		return getImportList(newDir)[getFileIndex(strFilename, newDir).value()].impdesc.Name;
+		return getImport(newDir, getFileIndex(strFilename, newDir)).impdesc.Name;
 	}
 
 	/**
@@ -1113,13 +1099,13 @@ namespace PeLib
 	inline
 	std::uint32_t ImportDirectory::getFirstThunk(std::uint32_t dwFilenr, bool newDir) const
 	{
-		return getImportList(newDir)[dwFilenr].impdesc.FirstThunk;
+		return getImport(newDir, dwFilenr).impdesc.FirstThunk;
 	}
 
 	inline
 	void ImportDirectory::setFirstThunk(std::uint32_t dwFilenr, bool newDir, std::uint32_t value)
 	{
-		getImportList(newDir)[dwFilenr].impdesc.FirstThunk = value;
+		getImport(newDir, dwFilenr).impdesc.FirstThunk = value;
 	}
 
 	/**
@@ -1130,13 +1116,13 @@ namespace PeLib
 	inline
 	std::uint32_t ImportDirectory::getOriginalFirstThunk(std::uint32_t dwFilenr, bool newDir) const
 	{
-		return getImportList(newDir)[dwFilenr].impdesc.OriginalFirstThunk;
+		return getImport(newDir, dwFilenr).impdesc.OriginalFirstThunk;
 	}
 
 	inline
 	void ImportDirectory::setOriginalFirstThunk(std::uint32_t dwFilenr, bool newDir, std::uint32_t value)
 	{
-		getImportList(newDir)[dwFilenr].impdesc.OriginalFirstThunk = value;
+		getImport(newDir, dwFilenr).impdesc.OriginalFirstThunk = value;
 	}
 
 	/**
@@ -1148,13 +1134,13 @@ namespace PeLib
 	inline
 	std::uint32_t ImportDirectory::getForwarderChain(std::uint32_t dwFilenr, bool newDir) const
 	{
-		return getImportList(newDir)[dwFilenr].impdesc.ForwarderChain;
+		return getImport(newDir, dwFilenr).impdesc.ForwarderChain;
 	}
 
 	inline
 	void ImportDirectory::setForwarderChain(std::uint32_t dwFilenr, bool newDir, std::uint32_t value)
 	{
-		getImportList(newDir)[dwFilenr].impdesc.ForwarderChain = value;
+		getImport(newDir, dwFilenr).impdesc.ForwarderChain = value;
 	}
 
 	/**
@@ -1165,25 +1151,25 @@ namespace PeLib
 	inline
 	std::uint32_t ImportDirectory::getTimeDateStamp(std::uint32_t dwFilenr, bool newDir) const
 	{
-		return getImportList(newDir)[dwFilenr].impdesc.TimeDateStamp;
+		return getImport(newDir, dwFilenr).impdesc.TimeDateStamp;
 	}
 
 	inline
 	void ImportDirectory::setTimeDateStamp(std::uint32_t dwFilenr, bool newDir, std::uint32_t value)
 	{
-		getImportList(newDir)[dwFilenr].impdesc.TimeDateStamp = value;
+		getImport(newDir, dwFilenr).impdesc.TimeDateStamp = value;
 	}
 
 	inline
 	std::uint32_t ImportDirectory::getRvaOfName(std::uint32_t dwFilenr, bool newDir) const
 	{
-		return getImportList(newDir)[dwFilenr].impdesc.Name;
+		return getImport(newDir, dwFilenr).impdesc.Name;
 	}
 
 	inline
 	void ImportDirectory::setRvaOfName(std::uint32_t dwFilenr, bool newDir, std::uint32_t value)
 	{
-		getImportList(newDir)[dwFilenr].impdesc.Name = value;
+		getImport(newDir, dwFilenr).impdesc.Name = value;
 	}
 
 	/**
@@ -1195,13 +1181,13 @@ namespace PeLib
 	inline
 	std::uint32_t ImportDirectory::getFirstThunk(std::uint32_t dwFilenr, std::uint32_t dwFuncnr, bool newDir) const
 	{
-		return getImportList(newDir)[dwFilenr].thunk_data[dwFuncnr].itd.Ordinal;
+		return getImport(newDir, dwFilenr).thunk_data[dwFuncnr].itd.Ordinal;
 	}
 
 	inline
 	void ImportDirectory::setFirstThunk(std::uint32_t dwFilenr, std::uint32_t dwFuncnr, bool newDir, std::uint32_t value)
 	{
-		getImportList(newDir)[dwFilenr].thunk_data[dwFuncnr].itd.Ordinal = value;
+		getImport(newDir, dwFilenr).thunk_data[dwFuncnr].itd.Ordinal = value;
 	}
 
 	/**
@@ -1233,7 +1219,7 @@ namespace PeLib
 	inline
 	void ImportDirectory::setOriginalFirstThunk(std::uint32_t dwFilenr, std::uint32_t dwFuncnr, bool newDir, std::uint32_t value)
 	{
-		getImportList(newDir)[dwFilenr].thunk_data[dwFuncnr].itd.Ordinal = value;
+		getImport(newDir, dwFilenr).thunk_data[dwFuncnr].itd.Ordinal = value;
 	}
 
 	inline
@@ -1252,6 +1238,9 @@ namespace PeLib
 		return (newDir == false) ? m_vOldiid : m_vNewiid;
 	}
 
+	inline PELIB_IMAGE_IMPORT_DIRECTORY& ImportDirectory::getImport(bool newDir, uint32_t index) {
+		return getImportList(newDir).at(index);
+	}
 
 } // namespace PeLib
 
